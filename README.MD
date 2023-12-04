@@ -25,15 +25,15 @@ Contribution is welcome.
 ## Preview
 
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/home.jpg" width="480" height="852" alt="Home Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/home.jpg" width="480" height="852" alt="Home Page"/><br/>
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/section.jpg" width="480" height="852" alt="Section Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/section.jpg" width="480" height="852" alt="Section Page"/><br/>
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/profile.jpg" width="480" height="852" alt="Profile Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/profile.jpg" width="480" height="852" alt="Profile Page"/><br/>
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/post.jpg" width="480" height="852" alt="Post Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/post.jpg" width="480" height="852" alt="Post Page"/><br/>
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/controlpanel.jpg" width="480" height="852" alt="Control Panel Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/controlpanel.jpg" width="480" height="852" alt="Control Panel Page"/><br/>
 
 ## Usage
 
