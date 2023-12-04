@@ -1,0 +1,117 @@
+﻿@namespace ProfileManage
+@using Microsoft.AspNetCore.Identity
+@using PicoForum.Data
+@using System.Security.Claims
+@rendermode InteractiveServer
+
+@inject UserManager<ApplicationUser> usermanager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+@if (!CheckIsSelf() && !usermanager.IsInRoleAsync(User, "SuperAdmin").Result)
+{
+    <AuthorizeView Roles="Admin,SuperAdmin">
+        <div>
+            @if (User.Mute)
+            {
+                <button class="btn btn-secondary my-1" @onclick="MuteUser">
+                    Unmute User
+                </button>
+            }
+            else
+            {
+                <button class="btn btn-danger my-1" @onclick="MuteUser">
+                    Mute User
+                </button>
+            }
+        </div>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="SuperAdmin">
+        <div >
+            @if (usermanager.IsInRoleAsync(User, "Admin").Result)
+            {
+                <button class="btn btn-secondary my-1" @onclick="SetAdmin">
+                    Cancel Admin
+                </button>
+            }
+            else
+            {
+                <button class="btn btn-success my-1" @onclick="SetAdmin">
+                    Set Admin
+                </button>
+            }
+        </div>
+    </AuthorizeView>
+}
+
+
+
+@code {
+    [Parameter]
+    public ApplicationUser User { get; set; }
+
+    ClaimsPrincipal Supervisor{ get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Supervisor = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+    }
+
+    bool CheckIsSelf()
+    {
+        if (Supervisor.Identity.IsAuthenticated == false)
+        {
+            return false;
+        }
+        if (Supervisor is null)
+        {
+            return false;
+        }
+        else
+        {
+            var id = Supervisor.FindFirst(ClaimTypes.NameIdentifier).Value;
+            return User.Id == id;
+        }
+    }
+
+    async void MuteUser()
+    {
+        if (Supervisor.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList().Exists(x => x == "Admin")&&
+           usermanager.IsInRoleAsync(User,"Admin").Result)
+        {
+            return;
+        }
+        if (User.Mute)
+        {
+            User.Mute = false;
+            await usermanager.UpdateAsync(User);
+        }
+        else
+        {
+            User.Mute = true;
+            await usermanager.UpdateAsync(User);
+        }
+        await InvokeAsync(StateHasChanged);
+        NavigationManager.Refresh();
+    }
+
+    async void SetAdmin()
+    {
+        if (await usermanager.IsInRoleAsync(User, "Admin"))
+        {
+            await usermanager.RemoveFromRoleAsync(User, "Admin");
+        }
+        else
+        {
+            await usermanager.AddToRoleAsync(User, "Admin");
+        }
+        await InvokeAsync(StateHasChanged);
+        NavigationManager.Refresh();
+    }
+
+    void RemoveAdmin()
+    {
+        
+    }
+}

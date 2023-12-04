@@ -1,0 +1,55 @@
+﻿using Microsoft.Extensions.Primitives;
+using System.Reflection;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
+namespace PicoForum.Models
+{
+    [Serializable]
+    public class PFConfig
+    {
+        public string ForumName { get; set; } = "Pico Forum";
+        public bool AllowGuest { get; set; } = true;
+        public bool AllowRegister { get; set; } = true;
+        public int QueryLimitPost { get; set; } = 10;
+        public int QueryLimitReply { get; set; } = 10;
+
+        string configFilePath;
+        public PFConfig(string path)
+        {
+            configFilePath = path;
+            if (File.Exists(configFilePath))
+            {
+
+                string jsonstring = File.ReadAllText(configFilePath);
+                PFConfig instance = JsonSerializer.Deserialize<PFConfig>(jsonstring);
+
+                ForumName = instance.ForumName;
+                AllowGuest = instance.AllowGuest;
+                AllowRegister = instance.AllowRegister;
+                QueryLimitPost = instance.QueryLimitPost;
+                QueryLimitReply = instance.QueryLimitReply;
+            }
+            SaveChange();
+        }
+        public PFConfig() { }
+        public bool SaveChange()
+        {
+            //try
+            {
+                string jsonString = JsonSerializer.Serialize(this, new JsonSerializerOptions
+                {
+                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+                    WriteIndented = true
+                });
+                File.WriteAllText(configFilePath, jsonString);
+                return true;
+            }
+            //catch (Exception ex)
+            {
+                // Console.WriteLine($"Error saving changes: {ex.Message}");
+                //return false; 
+            }
+        }
+    }
+}

@@ -1,0 +1,213 @@
+﻿@page "/section/{Id:int}"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Configuration
+@using PicoForum.Data
+@using PicoForum.Models
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using TinyMCE.Blazor
+@using PostList
+
+@inject PFConfig PFConfig
+@inject IJSRuntime JsRuntime
+@inject IConfiguration Configuration
+@inject ApplicationDbContext DB
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>
+    @pfSection.Name - @PFConfig.ForumName
+</PageTitle>
+
+<div class="container">
+    <div class="d-flex justify-content-between mx-3 my-3">
+        <div>
+            <h1>Welcome to @pfSection.Name!</h1>
+        </div>
+        <AuthorizeView Roles="SuperAdmin">
+            <div class="d-flex align-items-center justify-content-center">
+                <button class="btn btn-danger" @onclick=DeleteSection>
+                    Delete Section
+                </button>
+            </div>
+        </AuthorizeView>
+    </div>
+
+<PostList pfSection="@pfSection">
+
+</PostList>
+
+<AuthorizeView Context="PostVerify">
+    <Authorized>
+        <div class="center-content">
+            <StatusMessage Message="@Message"/>
+            <EditForm Model="InputPost" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="PublishPost" FormName="poster">
+                <DataAnnotationsValidator/>
+                <div class="form-floating my-3">
+                    <InputText @bind-Value="InputPost.Title" class="form-control align-text-top" placeholder="Input Title"/>
+                    <label>Title</label>
+                    <ValidationMessage For="() => InputPost.Title" class="text-danger" />
+                </div>
+                <div class="form-floating my-3">
+                    <Editor ApiKey="@_apikey" Conf="@_conf" @bind-Value=InputPost.Content Field="() => InputPost.Content"/>
+                    <ValidationMessage For="() => InputPost.Content" class="text-danger" />
+                </div>
+                <div class="justify-content-end d-flex align-items-center my-3">
+                    <button type="submit" class="w-25 btn btn-lg btn-primary my-3">Post</button>
+                </div>
+            </EditForm>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <button class="w-100 btn btn-lg btn-primary my-3" @onclick="GotoLogin">Login to publish a post</button>
+    </NotAuthorized>
+</AuthorizeView>
+</div>
+
+
+@code {
+    private List<string>? identityErrors;
+
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error))}";
+
+    private readonly string _initialValue = "Welcome to TinyMCE Blazor";
+    private string _apikey;
+    private Dictionary<string, object> _conf = new Dictionary<string, object> {
+            { "height", 400},
+            { "toolbar", "blocks | bold italic underline backcolor forecolor  | alignleft aligncenter alignright alignjustify | bullist numlist"},
+            { "plugins", "advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen wordcount"}
+        };
+    private string InputTitle{ get; set; }
+    private string InputContent{ get; set; }
+
+    public PFSection pfSection { get; set; }
+    public List<PFPost> posts { get; set; }
+
+    [SupplyParameterFromForm]
+    private InputModel InputPost { get; set; } = new();
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _apikey = Configuration.GetValue("TinyApiKey", "");
+        pfSection = DB.Sections.Where(x => x.PFSectionId == Id).FirstOrDefault();
+        InputTitle = "";
+        InputContent = "<p>Hello world</p>";
+        AllowGuest();
+    }
+
+    async Task AllowGuest()
+    {
+        if (!PFConfig.AllowGuest)
+        {
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+            if (!user.Identity.IsAuthenticated)
+            {
+                NavigationManager.NavigateTo("/Account/Login");
+            }
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        Id = Id;
+    }
+
+    public async Task<string> GetUsername(string userid)
+    {
+        var user = await UserManager.FindByIdAsync(userid);
+        return user.Friendlyname;
+    }
+
+    async void Submit()
+    {
+        await InvokeAsync(StateHasChanged);        
+    }
+
+    async Task PublishPost(EditContext editContext)
+    {
+        identityErrors = new List<string>();
+        try
+        {
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+            var id = user.FindFirst(ClaimTypes.NameIdentifier).Value;
+            ApplicationUser appuser = DB.Users.Where(x => x.Id == id).FirstOrDefault();
+            if (appuser is null)
+            {
+                identityErrors?.Add("Can't Find Current User.");
+                return;
+            }
+            if (appuser.Mute)
+            {
+                NavigationManager.NavigateTo("/mute", true);
+                return;
+            }
+            PFPost post = new PFPost(pfSection, appuser, InputPost.Title, InputPost.Content);
+            var result = DB.Posts.Add(post);
+            if (result is null)
+            {
+                identityErrors?.Add("Can't Add Post To Database.");
+                return;
+            }
+
+            if (DB.SaveChanges() > 0)
+            {
+                string url = $"post/{result.Entity.PFPostId}";
+                InputPost.Clear();
+
+                NavigationManager.NavigateTo(url);
+            }
+            else
+            {
+                identityErrors?.Add("Database Save Error");
+            }
+        }
+        catch
+        {
+            identityErrors?.Add("Unknow Error");
+        }
+    }
+
+    void GotoLogin()
+    {
+        NavigationManager.NavigateTo("/Account/Login");
+    }
+
+    async void DeleteSection()
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure delete this section?");
+        if (confirmed)
+        {
+            DB.Remove(pfSection);
+            DB.SaveChanges();
+            NavigationManager.NavigateTo($"/");
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 5)]
+        [Display(Name = "Title")]
+        public string Title { get; set; } = "";
+
+        [Required]
+        [StringLength(5000, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 5)]
+        [Display(Name = "Content")]
+        public string Content { get; set; } = "";
+
+        public void Clear()
+        {
+            Title = "";
+            Content = "";
+        }
+    }
+}

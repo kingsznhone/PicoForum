@@ -1,0 +1,86 @@
+﻿@namespace PostReplyContent
+@rendermode InteractiveServer
+
+
+@using PicoForum.Data
+@using PicoForum.Models
+@using System.Security.Claims
+@using PicoForum.Service
+@using PostUser
+
+@inject PFConfig PFConfig
+@inject IJSRuntime JsRuntime
+@inject ApplicationDbContext DB
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UpdateRequestService UpdateRequestService
+
+<div class="container-fluid my-2 border border-4 rounded-3" style="">
+    <div class="row ">
+        <div class="col-md-2 border-1 border-end" style="background-color: #F8F8FF;">
+            <PostUser UserId="@reply.UserId"/>
+        </div>
+        <div class="col-md-10 flex-column d-flex g-0" style="background-color: #FFFFFF;">
+
+            <div class="mx-4 my-3 flex-grow-1">
+                @(new MarkupString(reply.Content))
+            </div>
+
+            <div class="w-100 mx-0  border-1 border-top d-flex justify-content-end align-items-center" style="background-color: #FFFFF0;text-align:right;min-height:40px">
+                @if (isSelfReply(reply).Result)
+                {
+                    <div>
+                        <button class="btn btn-danger btn-sm my-1" @onclick="DeleteReply">
+                            Delete Reply
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <AuthorizeView Roles="Admin, SuperAdmin">
+                        <div>
+                            <button class="btn btn-danger btn-sm my-1" @onclick="DeleteReply">
+                                Delete Reply
+                            </button>
+                        </div>
+                    </AuthorizeView>
+                }
+                <text class="mx-3 my-1"> Time Publish: @reply.TimePublish</text>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public PFReply reply { get; set; }
+
+    [Parameter]
+    public Action<PFReply> DeleteAction { get; set; }
+
+    async Task<bool> isSelfReply(PFReply reply)
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        if (user.Identity.IsAuthenticated == false)
+        {
+            return false;
+        }
+        if (user is null)
+        {
+            return false;
+        }
+        else
+        {
+            var id = user.FindFirst(ClaimTypes.NameIdentifier).Value;
+            return reply.UserId == id;
+        }
+    }
+    async Task DeleteReply()
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure delete this post?");
+        if (confirmed)
+        {
+            DeleteAction(reply);
+        }
+    }
+}

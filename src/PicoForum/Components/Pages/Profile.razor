@@ -1,0 +1,76 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Configuration
+@using PicoForum.Data
+@using PicoForum.Models
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using PicoForum.Service
+@using TinyMCE.Blazor
+@using ProfilePostList
+@using ProfileManage
+
+@inject PFConfig PFConfig
+@inject ApplicationDbContext DB
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@page "/profile/{Id}"
+@rendermode InteractiveServer
+
+<PageTitle>
+    @user.Friendlyname - @PFConfig.ForumName
+</PageTitle>
+
+<div>
+    <div class="row">
+        <div class="col-3 d-flex flex-column my-3 border-2 border-end">
+            <div class="row d-flex justify-content-center  ">
+                <div class=" d-flex justify-content-center align-items-center" style="width: 80%;">
+                    <img src="@user.AvatarUrl" class="my-3 img-fluid border border-primary border-5 rounded-3 " alt="User Image" />
+                </div>
+            </div>
+            <div class="row my-3 d-flex justify-content-center align-items-center ">
+                <div class="text-wrap fw-bolder" style="font-size:x-large;text-align:center;">
+                    @user.Friendlyname
+                </div>
+            </div>
+            <AuthorizeView Roles="Admin, SuperAdmin">
+                <div class="d-flex flex-column justify-content-center my-3">
+                    <ProfileManage User="user" />
+                </div>
+            </AuthorizeView>
+        </div>
+
+        <div class="col-9 d-flex flex-column flex-grow-1">
+            <div class="mx-3 my-3">
+                <ProfilePostList User="user" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    ApplicationUser user { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserManager.FindByIdAsync(Id);
+        AllowGuest();
+    }
+
+    async Task AllowGuest()
+    {
+        if (!PFConfig.AllowGuest)
+        {
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+            if (!user.Identity.IsAuthenticated)
+            {
+                NavigationManager.NavigateTo("/Account/Login");
+            }
+        }
+    }
+}

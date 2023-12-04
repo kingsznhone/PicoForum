@@ -1,0 +1,132 @@
+﻿@page "/admin"
+@attribute [Authorize(Roles = "SuperAdmin")]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.WebUtilities
+@using System.ComponentModel.DataAnnotations
+@using PicoForum.Data
+@using PicoForum.Models
+
+@attribute [Authorize]
+@inject IConfiguration Configuration
+@inject ApplicationDbContext DB
+@inject PFConfig PFConfig
+@rendermode InteractiveServer
+
+<PageTitle>@Configuration["Server:Name"] - Control Panel </PageTitle>
+
+<h1>Control Panel</h1>
+
+<AuthorizeView>
+    <div class="container border border-2 rounded-3">
+        <div class="row mx-3 my-3">
+            <label class="form-label">Forum Name</label>
+            <input type="text" class="form-control" @bind="ForumName">
+            <div class="form-text">Input New Forum Name Here.</div>
+        </div>
+
+        <hr  class="dropdown-divider row">
+
+        <div class="form-check form-switch row mx-3 my-3">
+            <InputCheckbox class="form-check-input" type="checkbox" @bind-Value="AllowGuest" />
+            <label class="form-check-label">Allow guests to view posts.</label>
+        </div>
+        
+        <div class="form-check form-switch row mx-3 my-3">
+            <InputCheckbox class="form-check-input" type="checkbox" @bind-Value="AllowRegister" />
+            <label class="form-check-label" for="flexSwitchCheckChecked">Allow new user register.</label>
+        </div>
+
+        <div class="row mx-3 my-3">
+            <label class="form-label">Max query number of Posts</label>
+            <input type="number" class="form-control" @bind="QueryLimitPost">
+        </div>
+
+        <div class="row mx-3 my-3">
+            <label class="form-label">Max query number of Reply</label>
+            <input type="number" class="form-control" @bind="QueryLimitReply">
+        </div>
+        <div class="row mx-3 my-3 d-flex justify-content-end align-content-end">
+            <button class="btn btn-primary" @onclick="SaveClick">Save</button>
+        </div>
+        @if (Message == null || Message.Count == 0){}
+        else
+        {
+            foreach(var msg in Message)
+            {
+                var statusMessageClass = msg.StartsWith("Error") ? "danger" : "success";
+                <div class="row alert alert-@statusMessageClass" role="alert">
+                    @msg
+                </div>
+            }
+        }
+    </div>
+</AuthorizeView>
+
+@code{
+    private string ForumName { get; set; }
+    private bool AllowGuest { get; set; }
+    private bool AllowRegister { get; set; }
+
+    private int QueryLimitPost { get; set; }
+    private int QueryLimitReply { get; set; }
+
+    public List<string> Message { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Message = new();
+        ForumName =PFConfig.ForumName;
+        AllowGuest = PFConfig.AllowGuest;
+        AllowRegister = PFConfig.AllowRegister;
+        QueryLimitPost = PFConfig.QueryLimitPost;
+        QueryLimitReply = PFConfig.QueryLimitReply;
+        StateHasChanged();
+
+    }
+    void SaveClick()
+    {
+        Message.Clear();
+        bool pass = true;
+        //check name
+        if (1<ForumName.Length&&ForumName.Length < 20){}
+        else
+        {
+            pass = false;
+            Message.Add("Error: Forum name length not valid.");
+        }
+
+        //check query limit 
+        if (1 < QueryLimitPost && QueryLimitPost<100){}
+        else
+        {
+            pass = false;
+            Message.Add("Error: Query limit of post is out of range");
+        }
+
+        if (1 < QueryLimitReply && QueryLimitReply < 100) { }
+        else
+        {
+            pass = false;
+            Message.Add("Error: Query limit of reply is out of range");
+        }
+        //Save change
+        if (pass)
+        {
+            PFConfig.ForumName = ForumName;
+            PFConfig.AllowGuest = AllowGuest;
+            PFConfig.AllowRegister = AllowRegister;
+            PFConfig.QueryLimitPost = QueryLimitPost;
+            PFConfig.QueryLimitReply = QueryLimitReply;
+            if (PFConfig.SaveChange())
+            {
+                Message.Add("Success: All change is saved.");
+            }
+            else
+            {
+                Message.Add("Error: Change not saved.");
+            }
+        }
+        InvokeAsync(StateHasChanged);
+    }
+}
+

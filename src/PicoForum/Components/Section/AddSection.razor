@@ -1,0 +1,71 @@
+﻿@page "/AddSection"
+@using Microsoft.Extensions.Configuration
+@using PicoForum.Data
+@using PicoForum.Models
+@using SectionItem
+
+@inject PFConfig PFConfig
+@inject IConfiguration Configuration
+@inject ApplicationDbContext DB
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveServer
+
+<AuthorizeView Roles="SuperAdmin">
+    <div class="d-flex justify-content-center align-items-center" >
+        <div class="row mx-3 my-3">
+            <label class="form-label">Section Name</label>
+            <input type="text" class="form-control" @bind="NewSectionName">
+            <div class="form-text">Input New Section Name Here.</div>
+        </div>
+        <div class="row mx-3 my-3">
+            <button class="btn btn-primary" @onclick="CreateSection">
+                Create
+            </button>
+        </div>
+    </div>
+    <div class="d-flex justify-content-center align-items-center">
+        @if (ErrorMessage == null || ErrorMessage.Count == 0) { }
+        else
+        {
+            foreach (var msg in ErrorMessage)
+            {
+                var statusMessageClass = msg.StartsWith("Error") ? "danger" : "success";
+                <div class="row alert alert-@statusMessageClass" role="alert">
+                    @msg
+                </div>
+            }
+        }
+    </div>
+    
+</AuthorizeView>
+
+
+@code {
+    [Parameter]
+    public string NewSectionName{ get; set; }
+    List<string> ErrorMessage { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        ErrorMessage = new List<string>();
+
+    }
+    void CreateSection()
+    {
+        ErrorMessage.Clear();
+        var ExistSection = DB.Sections.Select(x => x.Name);
+        if (ExistSection.Contains(NewSectionName))
+        {
+            ErrorMessage.Add("Error: Section Name Already Exists.");
+        }
+        else
+        {
+            PFSection newsection = new() { Name = NewSectionName };
+            DB.Sections.Add(newsection);
+            DB.SaveChanges();
+            ErrorMessage.Add("Success: New Section Added");
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+}

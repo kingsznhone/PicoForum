@@ -1,0 +1,82 @@
+﻿@namespace PostMainContent
+@rendermode InteractiveServer
+
+
+@using PicoForum.Data
+@using PicoForum.Models
+@using System.Security.Claims
+@using PostUser
+
+
+@inject IJSRuntime JsRuntime
+@inject ApplicationDbContext DB
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+ <div class="container-fluid my-2 border border-5 rounded-3">        
+        <div class="row">
+            <div class="col-md-2" style="background-color: #F8F8FF;">
+                <PostUser UserId="@post.UserId" />
+            </div>
+            <div class="col-md-10 flex-column d-flex g-0" style="background-color: #FFFFFF;">
+                <div class="mx-4 my-3 flex-grow-1">
+                        @(new MarkupString(post.Content))
+                </div>
+                <div class="w-100 mx-0 border-1 border-top d-flex justify-content-end align-items-center" style="background-color: #FFFFF0;text-align:right;min-height:40px">
+                    @if (isSelfPost(post).Result)
+                    {
+                        <div>
+                        <button class="btn btn-danger btn-sm my-1" @onclick="DeletePost">
+                                Delete Post
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <AuthorizeView Roles="Admin, SuperAdmin">
+                            <div>
+                                <button class="btn btn-danger btn-sm my-1" @onclick="DeletePost">
+                                    Delete Post
+                                </button>
+                            </div>
+                        </AuthorizeView>
+                    }
+                    <text class="mx-3 my-1"> Time Publish: @post.TimePublish</text>
+                </div>
+            </div>
+        </div>
+    </div>
+ 
+@code {
+    [Parameter]
+    public PFPost post { get; set; }
+
+    async Task<bool> isSelfPost(PFPost post)
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        if (user.Identity.IsAuthenticated == false)
+        {
+            return false;
+        }
+        if (user is null)
+        {
+            return false;
+        }
+        else
+        {
+            var id = user.FindFirst(ClaimTypes.NameIdentifier).Value;
+            return post.UserId == id;
+        }
+    }
+    async Task DeletePost()
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure delete this post?");
+        if (confirmed)
+        {
+            int section = post.SectionId??0;
+            DB.Remove(post);
+            DB.SaveChanges();
+            NavigationManager.NavigateTo($"/section/{section}");
+        }
+    }
+}

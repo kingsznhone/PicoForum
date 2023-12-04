@@ -1,0 +1,82 @@
+﻿@page "/Account/Manage"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using PicoForum.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ApplicationDbContext DB
+<PageTitle>Profile</PageTitle>
+
+<h3>Profile</h3>
+<StatusMessage />
+
+<div class="row">
+    <div class="col-md-6">
+        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <input type="text" value="@username" class="form-control" placeholder="Please choose your username." disabled />
+                <label for="username" class="form-label">Username</label>
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.FriendlyName" class="form-control" placeholder="Please enter new friendly name." />
+                <label for="friendly-name" class="form-label">Friendly Name</label>
+                <ValidationMessage For="() => Input.FriendlyName" class="text-danger" />
+            </div>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ApplicationUser user = default!;
+    private string? username;
+    private string? friendlyName;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+        friendlyName = user.Friendlyname;
+
+        Input.FriendlyName ??= friendlyName;
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (Input.FriendlyName != friendlyName)
+        {
+            var MatchFriendlyName = DB.Users.Select(x => x.Friendlyname).ToList().Exists(x => x == Input.FriendlyName);
+            if (MatchFriendlyName)
+            {
+                RedirectManager.RedirectToCurrentPageWithStatus("Error: Friendly name already exist.", HttpContext);
+            }
+            else
+            {
+                var currentUser = DB.Users.Where(x => x.UserName == user.UserName).First();
+                currentUser.Friendlyname = Input.FriendlyName;
+                DB.SaveChanges();
+                await SignInManager.RefreshSignInAsync(user);
+                RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+            }
+        }
+        RedirectManager.RedirectToCurrentPageWithStatus("Error: Friendly name not change.", HttpContext);
+    }
+
+    private sealed class InputModel
+    {
+        [Display(Name = "FriendlyName")]
+        public string? FriendlyName { get; set; }
+    }
+}

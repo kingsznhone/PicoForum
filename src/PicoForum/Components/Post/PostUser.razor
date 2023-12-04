@@ -1,0 +1,30 @@
+﻿@namespace PostUser
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Identity
+@using PicoForum.Data
+
+@inject UserManager<ApplicationUser> UserManager
+<div class="justify-content-center align-items-center flex-column d-flex my-3 ">
+    <div class="" style="width: 60%;">
+        <a href="/profile/@UserId" style="text-decoration: none;">
+        <img src="@UserManager.FindByIdAsync(UserId).Result.AvatarUrl" class="my-1 img-fluid border border-primary border-5 rounded-3" alt="User Image" />
+        </a>
+    </div>
+    <a class="fw-bold" href="/profile/@UserId" style="text-decoration: none;color:black">@UserName</a>
+</div>
+
+@code {
+    [Parameter]
+    public string UserId { get; set; }
+
+    // 这里可以调用你的方法获取用户名
+    private string UserName => GetUsername(UserId).Result;
+
+    public async Task<string> GetUsername(string userid)
+    {
+        var user = await UserManager.FindByIdAsync(userid);
+        return user.Friendlyname;
+    }
+
+    
+}

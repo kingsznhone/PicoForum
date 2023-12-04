@@ -1,0 +1,23 @@
+﻿@namespace SectionItem
+@rendermode InteractiveServer
+@using Microsoft.Extensions.Configuration
+@using PicoForum.Data
+@using PicoForum.Models
+
+@inject PFConfig PFConfig
+@inject IConfiguration Configuration
+@inject ApplicationDbContext DB
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<a href="section/@category.PFSectionId" class="" style="text-decoration:none">
+    <div class="d-flex my-3 border border-2 rounded-3">
+        <div class="col-8 my-3 ps-3 justify-content-center align-items-center fw-bold" style="font-size:large;">
+            <span>@category.Name</span>
+        </div>
+    </div>
+</a>
+@code {
+    [Parameter]
+    public PFSection category { get; set; }
+}

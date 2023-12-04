@@ -1,0 +1,322 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Configuration
+@using PicoForum.Data
+@using PicoForum.Models
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using PicoForum.Service
+@using TinyMCE.Blazor
+@using PostUser
+@using PostMainContent
+@using PostReplyContent
+
+@inject PFConfig PFConfig
+@inject IConfiguration Configuration
+@inject ApplicationDbContext DB
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@page "/post/{Id:int}"
+@rendermode InteractiveServer
+
+<PageTitle>
+    @post.Title - @PFConfig.ForumName
+</PageTitle>
+
+<div class="justify-content-between flex-row d-flex">
+    <div>
+            <h4>@post.Title</h4>
+    </div>
+</div>
+
+<div class="flex-column">
+    <PostMainContent post="@post"/>
+
+    @foreach (var reply in replies)
+    {
+        <PostReplyContent reply="@reply" DeleteAction="DeleteReply"/>
+    }
+</div>
+
+<div class="container my-3  d-flex align-items-center justify-content-end">
+    <div>
+        <button class="btn btn-info mx-3" @onclick="PreviousPage" disabled="@IsFirstPage">Previous</button>
+        <span>Page <input @bind="inputPage" style="width: 50px; text-align:right" /> of @TotalPages</span>
+        <button class="btn btn-info mx-3" @onclick="NextPage" disabled="@IsLastPage">Next</button>
+        <button class="btn btn-info mx-3" @onclick="GoToPage">Go</button>
+    </div>
+</div>
+
+<AuthorizeView Context="ReplyVerify" >
+    <Authorized>
+        <div class="center-content my">
+            <EditForm Model="InputReply" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="PublishPost" FormName="replyform">
+                <DataAnnotationsValidator/>
+                <ValidationSummary class="text-danger" role="alert" />
+                <div class="form-floating mb-3">
+                    <Editor ApiKey="@_apikey" Conf="@_conf" @bind-Value=InputReply.Content Field="() => InputReply.Content" />
+                    <ValidationMessage For="() => InputReply.Content" class="text-danger" />
+                </div>
+                <div class="justify-content-end d-flex align-items-center my-3">
+                    <button type="submit" class="w-25 btn btn-lg btn-primary">Reply</button>
+                </div>
+            </EditForm>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <button class="w-100 btn btn-lg btn-primary my-3" @onclick="GotoLogin">Login to publish a post</button>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private List<string>? identityErrors;
+
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error))}";
+
+    private readonly string _initialValue = "Welcome to TinyMCE Blazor";
+    private string _apikey;
+    private Dictionary<string, object> _conf = new Dictionary<string, object> {
+            { "height", 400},
+            { "toolbar", "blocks | bold italic underline backcolor forecolor  | alignleft aligncenter alignright alignjustify | bullist numlist"},
+            { "plugins", "advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen wordcount"}
+    };
+
+    private string InputContent { get; set; }
+
+    PFSection pfSection { get; set; }
+    PFPost post{ get; set; }
+    List<PFReply> replies { get; set; }
+
+    [SupplyParameterFromForm]
+    private InputModel InputReply { get; set; } = new();
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    //need move to config
+    int pageSize = 1;
+
+    int pageNumber = 1;
+    int inputPage = 1;
+
+    bool IsFirstPage => pageNumber == 1;
+    bool IsLastPage => GetReplyData().Count < pageSize;
+    int TotalPages => (int)Math.Ceiling(DB.Replies.Where(x=>x.PostId ==Id).Count() / (double)pageSize);
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _apikey = Configuration.GetValue("TinyApiKey", "");
+        pageSize = PFConfig.QueryLimitReply;
+        post = DB.Posts.Where(x => x.PFPostId == Id).FirstOrDefault();
+        post.TotalAccess += 1;
+        DB.Update(post);
+        DB.SaveChanges();
+        pfSection = post.Section;
+        replies = GetReplyData();
+        pageNumber = 1;
+        InputContent = "<p>Hello world</p>";
+        AllowGuest();
+    }
+
+    async Task AllowGuest()
+    {
+        if (!PFConfig.AllowGuest)
+        {
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+            if (!user.Identity.IsAuthenticated)
+            {
+                NavigationManager.NavigateTo("/Account/Login");
+            }
+        }
+    }
+
+    List<PFReply> GetReplyData()
+    {
+
+        var skipAmount = pageSize * (pageNumber - 1);
+        var collection = DB.Replies.Where(x => x.PostId == post.PFPostId).OrderBy(x=>x.TimePublish).ToList();
+        if (collection == null)
+        {
+            return new List<PFReply>();
+        }
+        if (collection.Count == 0)
+        {
+            return new List<PFReply>();
+        }
+        else
+        {
+            return post.Replies.Skip(skipAmount).Take(pageSize).ToList();
+        }
+    }
+    async void NextPage()
+    {
+        if (!IsLastPage)
+        {
+            pageNumber++;
+            inputPage = pageNumber;
+            replies = GetReplyData();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    async void PreviousPage()
+    {
+        if (!IsFirstPage)
+        {
+            pageNumber--;
+            inputPage = pageNumber;
+            replies = GetReplyData();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    async void GoToPage()
+    {
+        // Validate the entered page number
+        if (inputPage < 1)
+        {
+            pageNumber = 1;
+            inputPage = 1;
+            replies = GetReplyData();
+            await InvokeAsync(StateHasChanged);
+        }
+        else if (inputPage >= 1 && inputPage <= TotalPages)
+        {
+            pageNumber = inputPage;
+            replies = GetReplyData();
+            await InvokeAsync(StateHasChanged);
+        }
+        else if (inputPage > TotalPages)
+        {
+            pageNumber = 1;
+            inputPage = 1;
+            replies = GetReplyData();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    async void Submit()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+    protected override void OnParametersSet()
+    {
+        Id = Id;
+    }
+
+    public async Task<string> GetUsername(string userid)
+    {
+        var user = await UserManager.FindByIdAsync(userid);
+        return user.Friendlyname;
+    }
+
+    async Task PublishPost(EditContext editContext)
+    {
+        identityErrors = new List<string>();
+        try
+        {
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+            var id = user.FindFirst(ClaimTypes.NameIdentifier).Value;
+            ApplicationUser appuser = DB.Users.Where(x => x.Id == id).FirstOrDefault();
+            if (appuser is null)
+            {
+                identityErrors?.Add("Can't Find Current User.");
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+            if (appuser.Mute)
+            {
+                NavigationManager.NavigateTo("/mute", true);
+                return;
+            }
+
+            PFReply reply = new PFReply(post, appuser, InputReply.Content);
+            var result = DB.Replies.Add(reply);
+            if (result is null)
+            {
+                identityErrors?.Add("Can't Add Reply To Database.");
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            if (DB.SaveChanges() > 0)
+            {
+                string url = $"post/{result.Entity.PostId}";
+                post = DB.Posts.Where(x => x.PFPostId == Id).FirstOrDefault();
+                replies = GetReplyData();
+                NavigationManager.Refresh(true);
+            }
+            else
+            {
+                identityErrors?.Add("Database Save Error");
+            }
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            identityErrors?.Add("Unknow Error");
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    void GotoLogin()
+    {
+        NavigationManager.NavigateTo("/Account/Login");
+    }
+
+    async Task<bool> isSelfReply(PFReply reply)
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        if (user.Identity.IsAuthenticated == false)
+        {
+            return false;
+        }
+        if (user is null)
+        {
+            return false;
+        }
+        else
+        {
+            var id = user.FindFirst(ClaimTypes.NameIdentifier).Value;
+            return reply.UserId == id;
+        }
+    }
+
+
+    async Task<bool> isSelfPost(PFPost post)
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        if (user.Identity.IsAuthenticated == false)
+        {
+            return false;
+        }
+        if (user is null)
+        {
+            return false;
+        }
+        else
+        {
+            var id = user.FindFirst(ClaimTypes.NameIdentifier).Value;
+            return post.UserId == id;
+        }
+    }
+
+    public void DeleteReply(PFReply reply)
+    {
+        DB.Replies.Remove(reply);
+        DB.SaveChanges();
+        InvokeAsync(StateHasChanged);
+        NavigationManager.NavigateTo($"/post/{Id}",true,true);
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [StringLength(5000, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 5)]
+        [Display(Name = "Content")]
+        public string Content { get; set; } = "";
+    }
+}

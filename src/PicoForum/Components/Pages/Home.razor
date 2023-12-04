@@ -1,0 +1,73 @@
+﻿@page "/"
+@using Microsoft.Extensions.Configuration
+@using PicoForum.Data
+@using PicoForum.Models
+@using SectionItem
+@inject PFConfig PFConfig
+@inject IConfiguration Configuration
+@inject ApplicationDbContext DB
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveServer
+
+<PageTitle>
+    @PFConfig.ForumName
+</PageTitle>
+
+<div class="container">
+    <div class="d-flex justify-content-between mx-3 -my-3">
+        <div>
+            <h1>Section</h1>
+        </div>
+        <AuthorizeView Roles="SuperAdmin">
+            <div class="d-flex align-items-center justify-content-center">
+                <button class="btn btn-primary" @onclick="AddSection">Add Section</button>
+            </div>
+        </AuthorizeView>
+    </div>
+    <div class="overflow-hidden mx-3">
+
+        @if (pfSections.Count == 0)
+        {
+            <div>There is no Section.</div>
+        }
+        else
+        {
+            foreach (var section in pfSections)
+            {
+                <SectionItem category="section" />
+            }
+        }
+
+    </div>
+</div>
+
+
+
+@code {
+    List<PFSection> pfSections;
+
+    protected override async Task OnInitializedAsync()
+    {
+        pfSections = DB.Sections.ToList();
+        Console.WriteLine("Test");
+        await AllowGuest();
+    }
+
+    async Task AllowGuest()
+    {
+        if (!PFConfig.AllowGuest)
+        {
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+            if (!user.Identity.IsAuthenticated)
+            {
+                NavigationManager.NavigateTo("/Account/Login");
+            }
+        }
+    }
+
+    void AddSection()
+    {
+        NavigationManager.NavigateTo("/AddSection");
+    }
+}
