@@ -51,36 +51,36 @@
     [Parameter]
     public ApplicationUser User { get; set; }
 
-    ClaimsPrincipal Supervisor{ get; set; }
+    ClaimsPrincipal client{ get; set; }
 
     [Parameter]
     public Action ManageAction { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Supervisor = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        client = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
     }
 
     bool CheckIsSelf()
     {
-        if (Supervisor.Identity.IsAuthenticated == false)
+        if (client.Identity.IsAuthenticated == false)
         {
             return false;
         }
-        if (Supervisor is null)
+        if (client is null)
         {
             return false;
         }
         else
         {
-            var id = Supervisor.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var id = client.FindFirst(ClaimTypes.NameIdentifier).Value;
             return User.Id == id;
         }
     }
 
     async void MuteUser()
     {
-        if (Supervisor.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList().Exists(x => x == "Admin")&&
+        if (client.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList().Exists(x => x == "Admin") &&
            usermanager.IsInRoleAsync(User,"Admin").Result)
         {
             return;

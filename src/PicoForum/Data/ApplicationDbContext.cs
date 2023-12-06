@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Hosting;
 using PicoForum.Models;
-using System.Reflection.Metadata;
 
 namespace PicoForum.Data
 {

@@ -1,0 +1,109 @@
+﻿@page "/search/{pattern}"
+@rendermode InteractiveServer
+
+@using PostItem
+@using PicoForum.Data
+@using PicoForum.Models
+@inject PFConfig PFConfig
+@inject IConfiguration Configuration
+@inject ApplicationDbContext DB
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="list-group">
+    @for (int i = 0; i < posts.Count; i++)
+    {
+        <PostItem Post="posts[i]"/>
+    }
+    @if (posts.Count == 0)
+    {
+        <div>There is No Post.</div>
+    }
+</div>
+<div class="container my-3 d-flex align-items-center justify-content-end">
+    <div>
+        <button class="btn btn-info" @onclick="PreviousPage" disabled="@IsFirstPage">Previous</button>
+        <span>Page <input @bind="inputPage" style="width: 50px; text-align:right" /> of @TotalPages</span>
+        <button class="btn btn-info" @onclick="NextPage" disabled="@IsLastPage">Next</button>
+        <button class="btn btn-info" @onclick="GoToPage">Go</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string pattern { get; set; }
+    public List<PFPost> posts { get; set; }
+    int pageSize;
+
+    int pageNumber = 1;
+    int inputPage = 1;
+
+    bool IsFirstPage => pageNumber == 1;
+    bool IsLastPage => GetPageData().Count < pageSize;
+    int TotalPages => (int)Math.Ceiling(DB.Posts.Where(x => x.Title.Contains(pattern)).Count() / (double)pageSize);
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        pageSize = PFConfig.QueryLimitSearch;
+        pageNumber = 1;
+        posts = GetPageData();
+        var result = DB.Posts.Where(x => x.Title.Contains(pattern)).ToArray();
+    }
+
+    List<PFPost> GetPageData()
+    {
+        var skipAmount = pageSize * (pageNumber - 1);
+        return DB.Posts.Where(x => x.Title.Contains(pattern))
+                        .OrderByDescending(x => x.TimeUpdate)
+                        .Skip(skipAmount).Take(pageSize).ToList();
+    }
+
+    async void NextPage()
+    {
+        if (!IsLastPage)
+        {
+            pageNumber++;
+            inputPage = pageNumber;
+            posts = GetPageData();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    async void PreviousPage()
+    {
+        if (!IsFirstPage)
+        {
+            pageNumber--;
+            inputPage = pageNumber;
+            posts = GetPageData();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    async void GoToPage()
+    {
+        // Validate the entered page number
+        if (inputPage < 1)
+        {
+            pageNumber = 1;
+            inputPage = 1;
+            posts = GetPageData();
+            await InvokeAsync(StateHasChanged);
+        }
+        else if (inputPage >= 1 && inputPage <= TotalPages)
+        {
+            pageNumber = inputPage;
+            posts = GetPageData();
+            await InvokeAsync(StateHasChanged);
+        }
+        else if (inputPage > TotalPages)
+        {
+            pageNumber = 1;
+            inputPage = 1;
+            posts = GetPageData();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}

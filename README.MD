@@ -80,9 +80,15 @@ I think Blazor should have more useful controls like this.
 
 ## Change Log
 
-### v0.0.0.2
+### v0.0.0.3  
+2023.12.13
 
-#### 2023.12.06
+- Fix avatar upload on Linux. Use Skiasharp.
+  
+- Add post search and search query limit.
+
+### v0.0.0.2
+2023.12.06
 
 - Add avatar upload. with safety check.
 
@@ -95,10 +101,11 @@ I think Blazor should have more useful controls like this.
 <img src="https://github.com/kingsznhone/PicoForum/blob/main/README/avatar.jpg" alt="profile avatar"/><br/>
 
 ### v0.0.0.1  
-
-#### 2023.12.04
+ 2023.12.04
 
 The Pico Forum is tiny, so the version number is also tiny.
+
+## Known Issue
 
 ## Roadmap
 
@@ -107,8 +114,6 @@ The Pico Forum is tiny, so the version number is also tiny.
 1. Add more infomation on Razor Component. Such as Total View/Reply.
 
 2. Add more field in user table. Like signature something.
-
-3. Search for posts.
    
 ### Long Term
 

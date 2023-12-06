@@ -1,8 +1,7 @@
-﻿using Microsoft.Extensions.Primitives;
-using System.Reflection;
-using System.Text.Encodings.Web;
+﻿using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
+
 namespace PicoForum.Models
 {
     [Serializable]
@@ -13,19 +12,20 @@ namespace PicoForum.Models
         public bool AllowRegister { get; set; } = true;
         public int QueryLimitPost { get; set; } = 10;
         public int QueryLimitReply { get; set; } = 10;
+        public int QueryLimitSearch { get; set; } = 10;
 
         //default 1m image
         public int MaxAvatarSize { get; set; } = 1024 * 1024;
 
         public int JpegCompressQuality { get; set; } = 80;
 
-        string configFilePath;
+        private string configFilePath;
+
         public PFConfig(string path)
         {
             configFilePath = path;
             if (File.Exists(configFilePath))
             {
-
                 string jsonstring = File.ReadAllText(configFilePath);
                 PFConfig instance = JsonSerializer.Deserialize<PFConfig>(jsonstring);
 
@@ -34,12 +34,16 @@ namespace PicoForum.Models
                 AllowRegister = instance.AllowRegister;
                 QueryLimitPost = instance.QueryLimitPost;
                 QueryLimitReply = instance.QueryLimitReply;
+                QueryLimitSearch = instance.QueryLimitSearch;
                 MaxAvatarSize = instance.MaxAvatarSize;
                 JpegCompressQuality = instance.JpegCompressQuality;
             }
             SaveChange();
         }
-        public PFConfig() { }
+
+        public PFConfig()
+        { }
+
         public bool SaveChange()
         {
             //try
@@ -55,7 +59,7 @@ namespace PicoForum.Models
             //catch (Exception ex)
             {
                 // Console.WriteLine($"Error saving changes: {ex.Message}");
-                //return false; 
+                //return false;
             }
         }
     }

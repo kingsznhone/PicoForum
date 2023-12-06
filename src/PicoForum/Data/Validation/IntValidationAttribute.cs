@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
 
 namespace PicoForum.Data.Validation
 {
@@ -7,7 +6,6 @@ namespace PicoForum.Data.Validation
     {
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
-            
             if (int.TryParse((string)value, out int buffer))
             {
                 return ValidationResult.Success;

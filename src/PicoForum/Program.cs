@@ -1,19 +1,12 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using PicoForum.Components;
 using PicoForum.Components.Account;
 using PicoForum.Data;
 using PicoForum.Models;
 using PicoForum.Service;
-using System;
-using System.Collections.Generic;
-using System.Net;
 
 namespace PicoForum
 {
@@ -22,7 +15,7 @@ namespace PicoForum
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
+
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
@@ -40,7 +33,7 @@ namespace PicoForum
                 })
                 .AddIdentityCookies();
 
-            //Add Database 
+            //Add Database
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(connectionString));
@@ -79,7 +72,7 @@ namespace PicoForum
                 // Default SignIn settings.
                 options.SignIn.RequireConfirmedEmail = false;
                 options.SignIn.RequireConfirmedPhoneNumber = false;
-                options.SignIn.RequireConfirmedAccount =false;
+                options.SignIn.RequireConfirmedAccount = false;
             });
 
             builder.Services.ConfigureApplicationCookie(options =>
@@ -97,14 +90,11 @@ namespace PicoForum
             string configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "serverconfig.json");
             Console.WriteLine($"Server Config Path: {configFilePath}");
             builder.Services.AddSingleton(provider => new PFConfig(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "serverconfig.json")));
-            //Add update request 
+            //Add update request
             builder.Services.AddSingleton<UpdateRequestService>();
-
-           
 
             var app = builder.Build();
 
-            
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -129,12 +119,10 @@ namespace PicoForum
             //await AddFakePost(app.Services);
             app.Run();
 
-
-
             async Task CreateRoles(IServiceProvider serviceProvider)
             {
                 using var scope = serviceProvider.CreateScope();
-                //initializing custom roles 
+                //initializing custom roles
                 var RoleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
                 var UserManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                 string[] roleNames = { "SuperAdmin", "Admin", "User" };
@@ -146,12 +134,12 @@ namespace PicoForum
                     // ensure that the role does not exist
                     if (!roleExist)
                     {
-                        //create the roles and seed them to the database: 
+                        //create the roles and seed them to the database:
                         roleResult = await RoleManager.CreateAsync(new IdentityRole(roleName));
                     }
                 }
 
-                // find the user with the admin email 
+                // find the user with the admin email
                 var _user = await UserManager.FindByNameAsync(@"admin@picoforum.com");
 
                 // check if the user exists
@@ -166,11 +154,10 @@ namespace PicoForum
                         Friendlyname = "Admin",
                         Email = @"admin@picoforum.com",
                         EmailConfirmed = true,
-                        AvatarUrl= "avatar/default.png"
+                        AvatarUrl = "avatar/default.png"
                     };
 
                     var validator = new PasswordValidator<ApplicationUser>() { };
-
 
                     string adminPassword = Console.ReadLine();
                     Console.Write(@"Confirm Password: ");
@@ -203,13 +190,11 @@ namespace PicoForum
                     {
                         Console.WriteLine("Create Admin Fail. Check your password");
                     }
-
                 }
             }
         }
 
-
-        static async Task AddFakePost(IServiceProvider serviceProvider)
+        private static async Task AddFakePost(IServiceProvider serviceProvider)
         {
             var scope = serviceProvider.CreateScope();
 
@@ -219,18 +204,16 @@ namespace PicoForum
 
             if (DB.Posts.Any()) { return; }
 
-
             for (int i = 0; i < 127; i++)
             {
-                var post = new PFPost(DB.Sections.FirstOrDefault(), _user, $"This Is Test Post Title {i}.",$"This is a Test Post {i}.");
+                var post = new PFPost(DB.Sections.FirstOrDefault(), _user, $"This Is Test Post Title {i}.", $"This is a Test Post {i}.");
                 DB.Posts.Add(post);
             }
-            
+
             DB.SaveChanges();
         }
 
-
-        static async Task AddFakeCategory(IServiceProvider serviceProvider)
+        private static async Task AddFakeCategory(IServiceProvider serviceProvider)
         {
             var scope = serviceProvider.CreateScope();
 
@@ -245,7 +228,7 @@ namespace PicoForum
                 Name = "Å·ÃÀ"
             };
 
-            DB.Sections.Add (category);
+            DB.Sections.Add(category);
             category = new PFSection()
             {
                 Name = "ÈÕº«"

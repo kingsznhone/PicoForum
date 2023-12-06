@@ -26,14 +26,12 @@
     @user.Friendlyname - @PFConfig.ForumName
 </PageTitle>
 
-
 <div>
     <div class="row justify-content-center align-items-center">
-        <div class="col-2 d-flex flex-column my-3 border-2 border-end">
-
-            <div class="card d-flex mx-2 my-1 justify-content-center align-items-center" style="">
+        <div class="col-3 d-flex flex-column my-3 border-2 border-end">
+            <div class="card d-flex mx-3 my-1 justify-content-center align-items-start" style="">
                 <img src="@user.AvatarUrl" class="card-img-top img-fluid border border-3 border-light rounded-3" style="aspect-ratio: 1 / 1;object-fit: cover;background-color:#CCC;" alt="...">
-                <div class="card-body justify-content-center align-items-center">
+                <div class="card-body ">
                     @if (UserManager.IsInRoleAsync(user, "SuperAdmin").Result)
                     {
                         <h5 class="card-title fw-bolder flex-wrap text-danger">@user.Friendlyname</h5>
@@ -49,8 +47,9 @@
                     
                     @if (isSelf(Id).Result)
                     {
-                        <label for="inputFile" class="btn btn-dark " style="width:8rem;background-color:#0d2363">
+                        <label for="inputFile" class="btn btn-dark" style="width:8rem;background-color:#0d2363;font-size:small">
                             <InputFile id="inputFile" OnChange="@LoadFiles" class="d-none" />
+                            <i class="bi bi-cloud-upload"></i>
                             Upload Avatar
                         </label>
                     }
@@ -69,7 +68,7 @@
             </AuthorizeView>
         </div>
 
-        <div class="col-10 d-flex flex-column flex-grow-1">
+        <div class="col-9 d-flex flex-column flex-grow-1 align-self-start">
             <div class="mx-3 my-3">
                 <ProfilePostList User="user"/>
             </div>

@@ -1,0 +1,47 @@
+﻿@namespace SearchInput
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using PicoForum.Data
+@using PicoForum.Models
+
+
+@inject PFConfig PFConfig
+@inject IConfiguration Configuration
+@inject ApplicationDbContext DB
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+<div class="input-group" style="width:24rem">
+    <input type="text" @bind=SearchPattern class="form-control" placeholder="Search For Posts" aria-label="Search For Posts" aria-describedby="button-addon2">
+    <button class="btn btn-outline-secondary" type="button" id="button-addon2" @onclick=SearchPost>Search</button>
+</div>
+
+
+@code {
+    ClaimsPrincipal client;
+
+    string SearchPattern{ get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+    }
+
+    async void  SearchPost()
+    {
+        if (client.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo($"/search/{SearchPattern}");
+        }
+        else
+        {
+            if (PFConfig.AllowGuest)
+            {
+                NavigationManager.NavigateTo($"/search/{SearchPattern}");
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/Account/Login");
+            }
+        }
+    }
+}

@@ -11,7 +11,7 @@ using PicoForum.Data;
 namespace PicoForum.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231206152217_InitialCreate")]
+    [Migration("20231213142745_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

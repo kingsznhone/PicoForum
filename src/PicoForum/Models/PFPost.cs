@@ -40,8 +40,6 @@ namespace PicoForum.Models
 
         public ICollection<PFReply> Replies { get; set; }
 
-
-
         public PFPost(PFSection section, ApplicationUser user, string title, string content)
         {
             User = user;
