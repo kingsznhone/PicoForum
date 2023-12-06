@@ -4,6 +4,8 @@
 
 Pico Forum is an ultra-lightweight forum framework built on ASP.NET Core Blazor.
 
+[Demo Host](https://pico.zangai.family/) (On my ubuntu server)
+
 Unlike common open-source forum projects that are developed using older technologies like PHP, the codebases of these projects have accumulated over the years, reaching an unimaginable level of complexity, becoming bloated and fragile.
 
 A forum doesn't necessarily have to be extensive; it can be compact and lightweight. This is where Pico Forum comes in.
@@ -25,15 +27,15 @@ Contribution is welcome.
 ## Preview
 
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/home.jpg" width="480" height="852" alt="Home Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/home.jpg" width="852" height="480" alt="Home Page"/><br/>
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/section.jpg" width="480" height="852" alt="Section Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/section.jpg" width="852" height="480" alt="Section Page"/><br/>
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/profile.jpg" width="480" height="852" alt="Profile Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/profile.jpg" width="852" height="480" alt="Profile Page"/><br/>
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/post.jpg" width="480" height="852" alt="Post Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/post.jpg" width="852" height="480" alt="Post Page"/><br/>
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/controlpanel.jpg" width="480" height="852" alt="Control Panel Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/controlpanel.jpg" width="852" height="480" alt="Control Panel Page"/><br/>
 
 ## Usage
 
