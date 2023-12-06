@@ -4,27 +4,51 @@
 @using PicoForum.Data
 
 @inject UserManager<ApplicationUser> UserManager
-<div class="justify-content-center align-items-center flex-column d-flex my-3 ">
-    <div class="" style="width: 60%;">
-        <a href="/profile/@UserId" style="text-decoration: none;">
-        <img src="@UserManager.FindByIdAsync(UserId).Result.AvatarUrl" class="my-1 img-fluid border border-primary border-5 rounded-3" alt="User Image" />
-        </a>
+
+<div class="row card d-flex mx-2 my-1 justify-content-center align-items-center" style="">
+    <a href="/profile/@UserId" style="text-decoration: none;">
+        <img src="@user.AvatarUrl" class="card-img-top img-fluid border border-3 border-light rounded-3" style="aspect-ratio: 1 / 1;object-fit: cover;background-color:#CCC;" alt="...">
+    </a>
+    <div class="card-body justify-content-center align-items-center">
+        @if (UserManager.IsInRoleAsync(user, "SuperAdmin").Result)
+        {
+            <a href="/profile/@UserId" style="text-decoration: none;">
+                <h5 class="card-title fw-bolder flex-wrap text-danger">@user.Friendlyname</h5>
+            </a>
+        }
+        else if (UserManager.IsInRoleAsync(user, "Admin").Result)
+        {
+            <a href="/profile/@UserId" style="text-decoration: none;">
+                <h5 class="card-title fw-bolder flex-wrap text-info">@user.Friendlyname</h5>
+            </a>
+        }
+        else
+        {
+            <a href="/profile/@UserId" style="text-decoration: none;">
+                <h5 class="card-title fw-bolder flex-wrap">@user.Friendlyname</h5>
+            </a>
+        }
     </div>
-    <a class="fw-bold" href="/profile/@UserId" style="text-decoration: none;color:black">@UserName</a>
 </div>
+
 
 @code {
     [Parameter]
     public string UserId { get; set; }
 
+    ApplicationUser user;
+
     // 这里可以调用你的方法获取用户名
     private string UserName => GetUsername(UserId).Result;
-
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserManager.FindByIdAsync(UserId);
+    }
     public async Task<string> GetUsername(string userid)
     {
         var user = await UserManager.FindByIdAsync(userid);
         return user.Friendlyname;
     }
 
-    
+
 }

@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-PicoForum-89497cd7-6407-4ce5-a513-7b56a0ce32ed</UserSecretsId>
 	<Authors>kingsznhone@github.com</Authors>
-	<VersionPrefix>0.0.0.1</VersionPrefix>
+	<VersionPrefix>0.0.0.2</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +29,12 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\avatar\default.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

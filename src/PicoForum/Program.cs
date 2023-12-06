@@ -60,11 +60,7 @@ namespace PicoForum
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
             });
-            builder.Services.Configure<KestrelServerOptions>(option =>
-            {
-                IPAddress ip = IPAddress.Parse(builder.Configuration.GetValue("Listen", "127.0.0.1"));
-                option.Listen(ip, builder.Configuration.GetValue("Port", 5000));
-            });
+
             //Configure password complexity
             builder.Services.Configure<IdentityOptions>(options =>
             {

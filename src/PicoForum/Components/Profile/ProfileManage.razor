@@ -53,6 +53,9 @@
 
     ClaimsPrincipal Supervisor{ get; set; }
 
+    [Parameter]
+    public Action ManageAction { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         Supervisor = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
@@ -93,7 +96,7 @@
             await usermanager.UpdateAsync(User);
         }
         await InvokeAsync(StateHasChanged);
-        NavigationManager.Refresh();
+        ManageAction.Invoke();
     }
 
     async void SetAdmin()
@@ -107,11 +110,6 @@
             await usermanager.AddToRoleAsync(User, "Admin");
         }
         await InvokeAsync(StateHasChanged);
-        NavigationManager.Refresh();
-    }
-
-    void RemoveAdmin()
-    {
-        
+        ManageAction.Invoke();
     }
 }

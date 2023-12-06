@@ -1,10 +1,14 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Microsoft.Extensions.Configuration
 @using PicoForum.Data
+@using PicoForum.Helper
 @using PicoForum.Models
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
 @using PicoForum.Service
+@using System.Drawing
+@using System.Security.Cryptography
+@using System.Text
 @using TinyMCE.Blazor
 @using ProfilePostList
 @using ProfileManage
@@ -22,29 +26,52 @@
     @user.Friendlyname - @PFConfig.ForumName
 </PageTitle>
 
+
 <div>
-    <div class="row">
-        <div class="col-3 d-flex flex-column my-3 border-2 border-end">
-            <div class="row d-flex justify-content-center  ">
-                <div class=" d-flex justify-content-center align-items-center" style="width: 80%;">
-                    <img src="@user.AvatarUrl" class="my-3 img-fluid border border-primary border-5 rounded-3 " alt="User Image" />
+    <div class="row justify-content-center align-items-center">
+        <div class="col-2 d-flex flex-column my-3 border-2 border-end">
+
+            <div class="card d-flex mx-2 my-1 justify-content-center align-items-center" style="">
+                <img src="@user.AvatarUrl" class="card-img-top img-fluid border border-3 border-light rounded-3" style="aspect-ratio: 1 / 1;object-fit: cover;background-color:#CCC;" alt="...">
+                <div class="card-body justify-content-center align-items-center">
+                    @if (UserManager.IsInRoleAsync(user, "SuperAdmin").Result)
+                    {
+                        <h5 class="card-title fw-bolder flex-wrap text-danger">@user.Friendlyname</h5>
+                    }
+                    else if (UserManager.IsInRoleAsync(user, "Admin").Result)
+                    {
+                        <h5 class="card-title fw-bolder flex-wrap text-info">@user.Friendlyname</h5>
+                    }
+                    else
+                    {
+                        <h5 class="card-title fw-bolder flex-wrap">@user.Friendlyname</h5>
+                    }
+                    
+                    @if (isSelf(Id).Result)
+                    {
+                        <label for="inputFile" class="btn btn-dark " style="width:8rem;background-color:#0d2363">
+                            <InputFile id="inputFile" OnChange="@LoadFiles" class="d-none" />
+                            Upload Avatar
+                        </label>
+                    }
+                    @if (!string.IsNullOrEmpty(UploadStatus))
+                    {
+                        <div class="text-sm-start">
+                            <span>@UploadStatus</span>
+                        </div>
+                    }
                 </div>
             </div>
-            <div class="row my-3 d-flex justify-content-center align-items-center ">
-                <div class="text-wrap fw-bolder" style="font-size:x-large;text-align:center;">
-                    @user.Friendlyname
-                </div>
-            </div>
-            <AuthorizeView Roles="Admin, SuperAdmin">
+            <AuthorizeView Roles="Admin,SuperAdmin">
                 <div class="d-flex flex-column justify-content-center my-3">
-                    <ProfileManage User="user" />
+                    <ProfileManage User="user" ManageAction="ManageAction" />
                 </div>
             </AuthorizeView>
         </div>
 
-        <div class="col-9 d-flex flex-column flex-grow-1">
+        <div class="col-10 d-flex flex-column flex-grow-1">
             <div class="mx-3 my-3">
-                <ProfilePostList User="user" />
+                <ProfilePostList User="user"/>
             </div>
         </div>
     </div>
@@ -56,6 +83,8 @@
 
     ApplicationUser user { get; set; }
 
+    string UploadStatus = "";
+    SHA256 sha256 = SHA256.Create();
     protected override async Task OnInitializedAsync()
     {
         user = await UserManager.FindByIdAsync(Id);
@@ -72,5 +101,88 @@
                 NavigationManager.NavigateTo("/Account/Login");
             }
         }
+    }
+
+    async Task<bool> isSelf(string ProfileID)
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        if (user.Identity.IsAuthenticated == false)
+        {
+            return false;
+        }
+        if (user is null)
+        {
+            return false;
+        }
+        else
+        {
+            var id = user.FindFirst(ClaimTypes.NameIdentifier).Value;
+            return ProfileID == id;
+        }
+    }
+    private async void LoadFiles(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size> PFConfig.MaxAvatarSize)
+        {
+            UploadStatus = $"Require Image Size < {PFConfig.MaxAvatarSize/(float)1024:f1}KB";
+            InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        if (file.ContentType == "image/jpeg" || file.ContentType == "image/png")
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await file.OpenReadStream(PFConfig.MaxAvatarSize).CopyToAsync(ms);
+                //try
+                {
+                    byte[] hashBytes = sha256.ComputeHash(ms.ToArray());
+                    string hashstring = string.Concat(hashBytes.Select(b => b.ToString("x2")));
+                    string url = $"avatar/{hashstring}.jpg";
+                    if (user.AvatarUrl == url)
+                    {
+                        UploadStatus = $"Image Upload Success.";
+                        InvokeAsync(StateHasChanged);
+                        return;
+                    }
+                    else
+                    {
+                        ImageHelper.SaveImageWithQuality(ms, $"wwwroot/{url}", PFConfig.JpegCompressQuality);
+                        if (user.AvatarUrl != "avatar/default.png")
+                        {
+                            File.Delete($"wwwroot/{user.AvatarUrl}");
+                        }
+                        user.AvatarUrl = url;
+                        DB.Update(user);
+                        DB.SaveChanges();
+                        UploadStatus = $"Image Upload Success.";
+                        InvokeAsync(StateHasChanged);
+                        return;
+                    }
+                }
+                //catch
+                {
+                    // UploadStatus = $"Image file was broken.";
+                    // InvokeAsync(StateHasChanged);
+                    // return;
+                }
+            }
+        }
+        else
+        {
+            UploadStatus = $"Require JPG/PNG File";
+            InvokeAsync(StateHasChanged);
+            return;
+        }
+        //"image/jpeg"
+        //"image/png"
+    }
+
+    public async void ManageAction()
+    {
+        user = await UserManager.FindByIdAsync(Id);
+        InvokeAsync(StateHasChanged);
+        NavigationManager.NavigateTo($"/profile/{Id}", true, true);
     }
 }

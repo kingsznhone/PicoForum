@@ -14,6 +14,11 @@ namespace PicoForum.Models
         public int QueryLimitPost { get; set; } = 10;
         public int QueryLimitReply { get; set; } = 10;
 
+        //default 1m image
+        public int MaxAvatarSize { get; set; } = 1024 * 1024;
+
+        public int JpegCompressQuality { get; set; } = 80;
+
         string configFilePath;
         public PFConfig(string path)
         {
@@ -29,6 +34,8 @@ namespace PicoForum.Models
                 AllowRegister = instance.AllowRegister;
                 QueryLimitPost = instance.QueryLimitPost;
                 QueryLimitReply = instance.QueryLimitReply;
+                MaxAvatarSize = instance.MaxAvatarSize;
+                JpegCompressQuality = instance.JpegCompressQuality;
             }
             SaveChange();
         }

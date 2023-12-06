@@ -41,11 +41,11 @@ Contribution is welcome.
 
 2. Download release.
 
-3. Edit ```appsetting.json``` for listen port and tinyMCE API.
+3. Edit ```appsetting.json``` for listen url.
 
 4. ```$ dotnet ./picoforum.dll``` on Linux <br> double click on ```picoforum.exe``` on Windows
 
-5. Input Password For admin@picoforum.com(Super Admin) in console.
+5. Input initial password for admin@picoforum.com(Super Admin) in console.
 
 
 ## Key Features:
@@ -78,6 +78,20 @@ I think Blazor should have more useful controls like this.
 
 ## Change Log
 
+### v0.0.0.2
+
+#### 2023.12.06
+
+- Add avatar upload. with safety check.
+
+- Add Jpeg compress quality option.
+
+- Add max avatar upload size option.
+
+- Use a better config option to control ip/port binding.
+
+<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/avatar.jpg"  alt="Control Panel Page"/><br/>
+
 ### v0.0.0.1  
 
 #### 2023.12.04
@@ -87,13 +101,12 @@ The Pico Forum is tiny, so the version number is also tiny.
 ## Roadmap
 
 ### Short Term
-1. User avatar still work-in-progress. I'm still trying to figure out how to upload image.
 
-2. Add more infomation on Razor Component. Such as Total View/Reply.
+1. Add more infomation on Razor Component. Such as Total View/Reply.
 
-3. Add more field in user table. Like signature something.
+2. Add more field in user table. Like signature something.
 
-4. Search for posts.
+3. Search for posts.
    
 ### Long Term
 
