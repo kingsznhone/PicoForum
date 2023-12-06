@@ -92,7 +92,7 @@ I think Blazor should have more useful controls like this.
 
 - Use a better config option to control ip/port binding.
 
-<img src="https://github.com/kingsznhone/PicoForum/blob/master/README/avatar.jpg"  alt="Control Panel Page"/><br/>
+<img src="https://github.com/kingsznhone/PicoForum/blob/main/README/avatar.jpg" alt="profile avatar"/><br/>
 
 ### v0.0.0.1  
 
