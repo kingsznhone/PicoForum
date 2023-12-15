@@ -11,9 +11,18 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <a href="section/@category.PFSectionId" class="" style="text-decoration:none">
-    <div class="d-flex my-3 border border-2 rounded-3">
+    <div class="d-flex my-3 border border-2 rounded-3 justify-content-between">
         <div class="col-8 my-3 ps-3 justify-content-center align-items-center fw-bold" style="font-size:large;">
             <span>@category.Name</span>
+        </div>
+        <div class="col-4 my-3 ps-3 d-flex ">
+            <div class="flex-column mx-3">
+                <div>total posts</div>
+            </div>
+            <div class="flex-column mx-3">
+                <span>Last Update: </span>
+            </div>
+            
         </div>
     </div>
 </a>
