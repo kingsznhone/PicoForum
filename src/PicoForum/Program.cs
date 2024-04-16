@@ -225,19 +225,19 @@ namespace PicoForum
             }
             PFSection category = new PFSection()
             {
-                Name = "欧美"
+                Name = "娆х編"
             };
 
             DB.Sections.Add(category);
             category = new PFSection()
             {
-                Name = "日韩"
+                Name = "鏃ラ煩"
             };
 
             DB.Sections.Add(category);
             category = new PFSection()
             {
-                Name = "国产"
+                Name = "鍥戒骇"
             };
 
             DB.Sections.Add(category);
