@@ -104,7 +104,7 @@ namespace PicoForum
             {
                 app.UseExceptionHandler("/Error");
             }
-
+            
             app.UseStaticFiles();
             app.UseAntiforgery();
 
@@ -114,9 +114,14 @@ namespace PicoForum
             // Add additional endpoints required by the Identity /Account Razor components.
             app.MapAdditionalIdentityEndpoints();
 
+            var scope = app.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            await db.Database.EnsureCreatedAsync();
+
             await CreateRoles(app.Services);
             //await AddFakeCategory(app.Services);
             //await AddFakePost(app.Services);
+
             app.Run();
 
             async Task CreateRoles(IServiceProvider serviceProvider)

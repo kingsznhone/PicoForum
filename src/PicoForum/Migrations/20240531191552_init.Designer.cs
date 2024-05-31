@@ -11,8 +11,8 @@ using PicoForum.Data;
 namespace PicoForum.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231213142745_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20240531191552_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -303,6 +303,9 @@ namespace PicoForum.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("TimeUpdate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("PFSectionId");

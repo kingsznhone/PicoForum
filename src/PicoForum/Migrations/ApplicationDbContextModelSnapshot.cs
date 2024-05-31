@@ -302,6 +302,9 @@ namespace PicoForum.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("TimeUpdate")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("PFSectionId");
 
                     b.ToTable("Sections");
