@@ -4,10 +4,6 @@
 
 Pico Forum is an ultra-lightweight forum framework built on ASP.NET Core Blazor.
 
-This image is used to prevent my account and repository from being cloned by mirror and does not represent my political stance.
-
-<img src="https://static.wikia.nocookie.net/pdsh/images/f/f2/Tank-man-china-web.jpg">
-
 [Demo Host](https://pico.zangai.family/) (On my ubuntu server)
 
 Unlike common open-source forum projects that are developed using older technologies like PHP, the codebases of these projects have accumulated over the years, reaching an unimaginable level of complexity, becoming bloated and fragile.
