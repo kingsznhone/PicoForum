@@ -109,7 +109,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _apikey = Configuration.GetValue("TinyApiKey", "");
+        _apikey = Configuration.GetValue("TinyMCEApiKey", "");
         pageSize = PFConfig.QueryLimitReply;
         post = DB.Posts.Where(x => x.PFPostId == Id).FirstOrDefault();
         post.TotalAccess += 1;

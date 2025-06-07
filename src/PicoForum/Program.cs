@@ -127,6 +127,9 @@ namespace PicoForum
             async Task CreateRoles(IServiceProvider serviceProvider)
             {
                 using var scope = serviceProvider.CreateScope();
+                // Ensure DB Created
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                dbContext.Database.EnsureCreated();
                 //initializing custom roles
                 var RoleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
                 var UserManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -197,6 +200,11 @@ namespace PicoForum
                     }
                 }
             }
+        }
+
+        private static void EnsureDB()
+        {
+
         }
 
         private static async Task AddFakePost(IServiceProvider serviceProvider)

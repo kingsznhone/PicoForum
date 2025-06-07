@@ -60,7 +60,7 @@ Contribution is welcome.
 
 4. Low coupling with the system environment; backup only requires copying the directory.
 
-5. Cross-platform on Windows and Linux. (Not fully tested yet)
+5. Cross-platform on Windows and Linux.
 
 6. No phone number, no email validation. Reg & Go like internet 90's.
 
@@ -74,11 +74,21 @@ Contribution is welcome.
 
 3. Copy Api Key to ```appsetting.json```
 
-4. Add your host domain in  [dashboard](https://www.tiny.cloud/my-account/domains/)
+4. (override) use Enviroment variable `export TinyMCEApiKey="your_api_key_here"`
+   
+5. (override) use commandline args `--TinyMCEApiKey="your_api_key_here"` 
 
-I think Blazor should have more useful controls like this. 
+6. Add your host domain in  [TinyMCE dashboard](https://www.tiny.cloud/my-account/domains/)
+
 
 ## Change Log
+### v0.0.0.4 
+
+2025.06.08
+
+Update Nugets.
+
+Update appsetting.json
 
 ### v0.0.0.3  
 2023.12.13

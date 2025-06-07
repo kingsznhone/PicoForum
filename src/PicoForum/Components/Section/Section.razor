@@ -97,7 +97,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _apikey = Configuration.GetValue("TinyApiKey", "");
+        _apikey = Configuration.GetValue("TinyMCEApiKey", "");
         pfSection = DB.Sections.Where(x => x.PFSectionId == Id).FirstOrDefault();
         InputTitle = "";
         InputContent = "<p>Hello world</p>";
